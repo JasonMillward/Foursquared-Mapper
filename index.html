@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+        <style type="text/css">
+            html { height: 100% }
+            body { height: 100%; margin: 0; padding: 0; font: normal 14px/1.5em "Helvetica Neue", Helvetica, sans-serif; }
+            #map_canvas { height: 100% }
+        </style>
+        <script src="//maps.googleapis.com/maps/api/js?sensor=false&#038;ver=1.0"> </script>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+        <script type="text/javascript">
+            $(document).ready(function() {
+                var mapOptions = {
+                    center: new google.maps.LatLng(0,0),
+                    zoom: 14,
+                    mapTypeId: google.maps.MapTypeId.ROADMAP
+                };
+                var contentString   = '';
+                var infowindow      = new google.maps.InfoWindow({
+                    content: contentString,
+                    maxWidth: 500
+                });
+                var polyOptions = {
+                    strokeColor: '#000000',
+                    strokeOpacity: 1.0,
+                    strokeWeight: 5
+                }
+                var map  = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
+                var poly = new google.maps.Polyline(polyOptions);
+                poly.setMap(map);
+                var path = poly.getPath();
+
+                $.getJSON('extract.php', function(data) {
+                    $.each(data, function(key, val) {
+                        var checkLatLng = new google.maps.LatLng( val.lat, val.lng);
+                        var image       = val.image;
+                        var markertitle = val.name;
+                        var status      = ( val.status == null ? "" : val.status );
+                        var marker = new google.maps.Marker({
+                            position: checkLatLng,
+                            map: map,
+                            icon: image,
+                            title: markertitle
+                        });
+
+                        path.push(checkLatLng);
+
+                        if (key == 0) {
+                            map.setCenter(checkLatLng);
+                        }
+
+                        google.maps.event.addListener(marker, 'click', function() {
+                            var contentString = '<h3>' + val.name + '</h3>' + status;
+                            infowindow.setContent(contentString);
+                            infowindow.open(map,this);
+                        });
+                    });
+                });
+            });
+        </script>
+    </head>
+    <body>
+        <div id="map_canvas" style="width:100%; height:100%"></div>
+    </body>
+</html>
+
